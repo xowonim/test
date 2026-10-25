@@ -83,10 +83,12 @@
     };
   }
   function sortParts(list) {
-    return list.sort(function (a, b) {
-      var ma = partMeta(a.n), mb = partMeta(b.n);
-      if (ma.order !== mb.order) return ma.order < mb.order ? -1 : 1;
-      return a.n.localeCompare(b.n, 'ko', { numeric: true });
+    return list.sort(function (x, y) {
+      var dx = x.d == null ? Infinity : x.d, dy = y.d == null ? Infinity : y.d;
+      if (dx !== dy) return dx < dy ? -1 : 1;
+      var mx = partMeta(x.n), my = partMeta(y.n);
+      if (mx.order !== my.order) return mx.order < my.order ? -1 : 1;
+      return x.n.localeCompare(y.n, 'ko', { numeric: true });
     });
   }
   function repoInfo() {
@@ -99,8 +101,57 @@
     }
     return { owner: owner, repo: repo, branch: REPO.branch || '' };
   }
+  /* ---------- 업로드 시간 순 정렬 ----------
+     폴더에 영향을 준 커밋을 오래된 순으로 따라가며 파일별 업로드 시각을 구합니다. (커밋 내용은 한 번 받으면 저장해 둡니다) */
+  function ghGet(path) {
+    return fetch('https://api.github.com' + path).then(function (res) {
+      if (!res.ok) throw new Error('api ' + res.status);
+      return res.json();
+    });
+  }
+  function commitFiles(r, sha) {
+    var ck = 'cm2:' + sha, c = null;
+    try { c = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) {}
+    if (c) return Promise.resolve(c);
+    return ghGet('/repos/' + r.owner + '/' + r.repo + '/commits/' + sha).then(function (d) {
+      var dir = partsDir() + '/';
+      var files = (d.files || []).filter(function (f) {
+        return f.filename.indexOf(dir) === 0 || (f.previous_filename && f.previous_filename.indexOf(dir) === 0);
+      }).map(function (f) { return { f: f.filename, st: f.status, p: f.previous_filename || '' }; });
+      var out = { files: files };
+      try { localStorage.setItem(ck, JSON.stringify(out)); } catch (e) {}
+      return out;
+    });
+  }
+  function loadDates(r, folder) {
+    var q = '/repos/' + r.owner + '/' + r.repo + '/commits?per_page=100&path=' +
+      encodeURIComponent(partsDir() + '/' + folder) + (r.branch ? '&sha=' + encodeURIComponent(r.branch) : '');
+    return ghGet(q).then(function (commits) {
+      commits = commits.slice().reverse();
+      return Promise.all(commits.map(function (c) { return commitFiles(r, c.sha); })).then(function (details) {
+        var dates = {};
+        commits.forEach(function (c, i) {
+          var who = c.commit.committer || c.commit.author;
+          var t = Date.parse(who.date);
+          details[i].files.forEach(function (f) {
+            if (f.st === 'removed') { delete dates[f.f]; return; }
+            if (f.st === 'renamed') {
+              dates[f.f] = dates[f.p] != null ? dates[f.p] : t;
+              delete dates[f.p];
+              return;
+            }
+            if (f.st === 'modified' || f.st === 'changed') { if (dates[f.f] == null) dates[f.f] = t; return; }
+            dates[f.f] = t;
+          });
+        });
+        return dates;
+      });
+    });
+  }
+
   function loadParts(key, force) {
-    var ck = 'parts2:' + folderOf(key), cached = null;
+    var folder = folderOf(key);
+    var ck = 'parts3:' + folder, cached = null;
     try { cached = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) {}
     if (!force && cached && Date.now() - cached.t < CACHE_MS) return Promise.resolve(cached.list);
 
@@ -109,7 +160,22 @@
       if (cached) return Promise.resolve(cached.list);
       return Promise.reject(new Error('저장소 정보를 알 수 없습니다. parts-data.js의 REPO를 채워 주세요.'));
     }
-    var url = 'https://api.github.com/repos/' + r.owner + '/' + r.repo + '/contents/' + partsDir() + '/' + folderOf(key) +
+    function finish(list, etag) {
+      return loadDates(r, folder).then(function (dates) {
+        list.forEach(function (it) {
+          var d = dates[partsDir() + '/' + folder + '/' + it.n];
+          if (d != null) it.d = d;
+        });
+        return true;
+      }).catch(function () { return false; }).then(function (dated) {
+        sortParts(list);
+        if (list.length) {
+          try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: list, etag: etag, dated: dated })); } catch (e) {}
+        }
+        return list;
+      });
+    }
+    var url = 'https://api.github.com/repos/' + r.owner + '/' + r.repo + '/contents/' + partsDir() + '/' + folder +
       (r.branch ? '?ref=' + encodeURIComponent(r.branch) : '');
     var headers = {};
     if (cached && cached.etag) headers['If-None-Match'] = cached.etag;
@@ -122,15 +188,14 @@
       return res.json();
     }).then(function (data) {
       if (data && data.notModified) {
-        try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: cached.list, etag: cached.etag })); } catch (e) {}
+        if (cached.dated === false) return finish(cached.list, cached.etag);
+        try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: cached.list, etag: cached.etag, dated: cached.dated })); } catch (e) {}
         return cached.list;
       }
       var list = (Array.isArray(data) ? data : []).filter(function (f) {
         return f.type === 'file' && /\.(png|jpe?g|webp|gif|svg)$/i.test(f.name);
       }).map(function (f) { return { n: f.name, s: f.sha }; });
-      sortParts(list);
-      if (list.length) { try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: list, etag: etag })); } catch (e) {} }
-      return list;
+      return finish(list, etag);
     }).catch(function (err) {
       if (cached) return cached.list;
       throw err;
