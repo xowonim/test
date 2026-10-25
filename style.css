@@ -1,11 +1,11 @@
 :root {
   --line: #2a2a2a;
-  --label: #fff0cc;
+  --label: #e3edd0;
   --blue: #bfe0f5;
-  --green: #d4ecc0;
+  --green: #c6e3ad;
   --red: #ffd0d0;
   --gray: #e6e6e6;
-  --ring: #d9a6cf;
+  --ring: #8fb56f;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -141,7 +141,7 @@ select.field { appearance: none; -webkit-appearance: none; }
 .picker-head span { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .pick-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .pick-item { border: 1px solid #ddd; background: #fff; padding: 6px 4px; text-align: center; min-width: 0; }
-.pick-item.on { border: 2px solid var(--ring); background: #fdf3fb; }
+.pick-item.on { border: 2px solid var(--ring); background: #f1f7e8; }
 .pick-item b { display: block; font-size: clamp(9px, 2vw, 13px); font-weight: 600; margin-top: 4px; word-break: break-all; }
 .pick-item small { display: block; font-size: clamp(8px, 1.7vw, 11px); color: #777; margin-top: 2px; word-break: break-all; }
 .empty { grid-column: 1 / -1; color: #999; text-align: center; padding: 20px 0; margin: 0; }

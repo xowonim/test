@@ -282,7 +282,7 @@
     var r = resolveSel(key);
     var cur = r ? r.n : '';
     if (!list.length) {
-      $pickGrid.innerHTML = '<p class="empty">이 항목에 올라온 이미지가 없습니다.<br>확인한 폴더: ' + esc(partsDir() + '/' + key) + '</p>';
+      $pickGrid.innerHTML = '<p class="empty">이미지가 없습니다.</p>';
       return;
     }
     $pickGrid.innerHTML = list.map(function (item) {
