@@ -288,7 +288,7 @@
     $pickTitle.textContent = labelOf(key) + ' 선택';
     $pickGrid.innerHTML = '<p class="empty">불러오는 중</p>';
     $picker.hidden = false;
-    $picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.body.style.overflow = 'hidden';
     loadParts(key, force).then(function (list) {
       partLists[key] = list;
       if (pickKey === key) renderPickList(key, list);
@@ -296,7 +296,9 @@
       if (pickKey === key) $pickGrid.innerHTML = '<p class="empty">' + esc(err.message) + '</p>';
     });
   }
-  function closePicker() { pickKey = null; $picker.hidden = true; }
+  function closePicker() { pickKey = null; $picker.hidden = true; document.body.style.overflow = ''; }
+  $picker.addEventListener('click', function (e) { if (e.target === $picker) closePicker(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pickKey) closePicker(); });
 
   $pickGrid.addEventListener('click', function (e) {
     var b = e.target.closest('.pick-item');

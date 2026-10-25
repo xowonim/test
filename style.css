@@ -128,10 +128,19 @@ select.field { appearance: none; -webkit-appearance: none; }
 .card-row .no { text-align: center; font-size: 13px; }
 
 /* 파츠 선택 패널 */
-.picker { margin-top: 18px; border: 2px solid var(--line); background: #fff; padding: 12px; }
-.picker-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.picker-head span { display: flex; gap: 6px; }
-.pick-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.picker {
+  position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .35);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.picker[hidden] { display: none; }
+.picker-box {
+  background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 14px;
+  width: min(720px, 100%); max-height: 80vh; display: flex; flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .2);
+}
+.picker-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex: none; }
+.picker-head span { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pick-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .pick-item { border: 1px solid #ddd; background: #fff; border-radius: 10px; padding: 6px 4px; text-align: center; min-width: 0; }
 .pick-item.on { border: 2px solid var(--ring); background: #fdf3fb; }
 .pick-item b { display: block; font-size: clamp(9px, 2vw, 13px); font-weight: 600; margin-top: 4px; word-break: break-all; }

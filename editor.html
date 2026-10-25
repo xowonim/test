@@ -24,19 +24,22 @@
   <div class="box">
     <div id="panel"></div>
 
-    <section id="picker" class="picker" hidden>
-      <header class="picker-head">
-        <strong id="pickTitle"></strong>
-        <span>
-          <button type="button" class="ghost" id="pickRefresh">새로고침</button>
-          <button type="button" class="ghost" id="pickClear">선택 해제</button>
-          <button type="button" class="ghost" id="pickClose">닫기</button>
-        </span>
-      </header>
-      <div id="pickGrid" class="pick-grid"></div>
-    </section>
   </div>
 </main>
+
+<section id="picker" class="picker" hidden>
+  <div class="picker-box">
+    <header class="picker-head">
+      <strong id="pickTitle"></strong>
+      <span>
+        <button type="button" class="ghost" id="pickRefresh">새로고침</button>
+        <button type="button" class="ghost" id="pickClear">선택 해제</button>
+        <button type="button" class="ghost" id="pickClose">닫기</button>
+      </span>
+    </header>
+    <div id="pickGrid" class="pick-grid"></div>
+  </div>
+</section>
 
 <input type="file" id="fileInput" accept="image/*" hidden>
 <datalist id="songs"></datalist>
