@@ -37,7 +37,7 @@
     return {
       parts: {}, qr: '', coordi: '', song: '', buzz: '', record: '', etc: '',
       codes: [{ img: '', text: '' }],
-      friendCards: [{ img: '', text: '' }, { img: '', text: '' }, { img: '', text: '' }]
+      friendCards: [{ img: '', text: '' }]
     };
   }
   function defaults2() {
@@ -155,7 +155,7 @@
     });
   }
 
-  function loadPartsRaw(key, force) {
+  function apiLoadParts(key, force) {
     var folder = folderOf(key);
     var ck = 'parts3:' + folder, cached = null;
     try { cached = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) {}
@@ -212,6 +212,32 @@
     }).catch(function (err) {
       if (cached) return cached.list;
       throw err;
+    });
+  }
+
+  /* 1순위: 저장소 루트의 parts.json (깃허브 Actions가 자동으로 만들어 주는 목록, 조회 한도 없음)
+     2순위: 깃허브 API (parts.json이 없을 때) */
+  var manifestState = { t: 0, data: null, p: null };
+  function getManifest(force) {
+    if (manifestState.p) return manifestState.p;
+    if (!force && manifestState.t && Date.now() - manifestState.t < 60000) return Promise.resolve(manifestState.data);
+    var p = fetch('parts.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .catch(function () { return null; });
+    manifestState.p = p;
+    p.then(function (d) { manifestState.data = d; manifestState.t = Date.now(); manifestState.p = null; });
+    return p;
+  }
+  function loadPartsRaw(key, force) {
+    return getManifest(force).then(function (m) {
+      if (m && m.folders) {
+        var folder = folderOf(key);
+        var list = (m.folders[folder] || []).map(function (x) { return { n: x.n, s: x.s, d: x.d }; });
+        sortParts(list);
+        try { localStorage.setItem('parts3:' + folder, JSON.stringify({ t: Date.now(), list: list, dated: true, empty: !list.length })); } catch (e) {}
+        return list;
+      }
+      return apiLoadParts(key, force);
     });
   }
 
@@ -366,16 +392,19 @@
     var row1 = PART_ITEMS.slice(0, 7).map(partCell).join('');
     var row2 = PART_ITEMS.slice(7).map(partCell).join('');
 
-    var friendCols = [0, 1, 2].map(function (i) {
-      var t = (c.friendCards[i] && c.friendCards[i].text) || '';
-      return '<div class="fcol"><div class="fone">' + slot('ch1.friendCards.' + i + '.img', 'card') +
+    var fn = c.friendCards.length;
+    var friendCols = c.friendCards.map(function (card, i) {
+      var t = card.text || '';
+      return '<div class="fcol">' +
+        (fn > 1 ? '<button type="button" class="icon-btn" data-act="fc-del" data-i="' + i + '" aria-label="삭제">×</button>' : '') +
+        '<div class="fone">' + slot('ch1.friendCards.' + i + '.img', 'card') +
         '<textarea class="field" data-bind="ch1.friendCards.' + i + '.text" rows="2">' + esc(t) + '</textarea></div></div>';
     }).join('');
 
     var codes = c.codes.map(function (r, i) {
       return '<div class="code-row">' + slot('ch1.codes.' + i + '.img', 'small') +
         '<input class="field" data-bind="ch1.codes.' + i + '.text" value="' + esc(r.text) + '" placeholder="코드">' +
-        '<button type="button" class="mini" data-act="del-code" data-i="' + i + '">삭제</button></div>';
+        '<button type="button" class="icon-btn" data-act="del-code" data-i="' + i + '" aria-label="삭제">×</button></div>';
     }).join('');
 
 
@@ -396,14 +425,16 @@
             '<textarea class="field" data-bind="ch1.etc" rows="4">' + esc(c.etc) + '</textarea></div>' +
         '</div>' +
       '</div>' +
-      '<section class="friends"><div class="lab">프렌드카드</div><div class="fthree">' + friendCols + '</div></section>' +
+      '<section class="friends"><div class="lab flab">프렌드카드' +
+        (fn < 3 ? '<button type="button" class="icon-btn" data-act="fc-add" aria-label="추가">+</button>' : '') + '</div>' +
+        '<div class="fthree" style="grid-template-columns:repeat(' + fn + ',minmax(0,1fr))">' + friendCols + '</div></section>' +
     '</div>';
   }
 
   function renderCh2() {
     var cards = ch.ch2.cards.map(function (r, i) {
       return '<div class="fcard"><div class="fhead"><span class="no">' + (i + 1) + '</span>' +
-        '<button type="button" class="mini" data-act="del-card" data-i="' + i + '">삭제</button></div>' +
+        '<button type="button" class="icon-btn" data-act="del-card" data-i="' + i + '" aria-label="삭제">×</button></div>' +
         '<div class="fslots">' + slot('ch2.cards.' + i + '.img', 'card') +
         slot('ch2.cards.' + i + '.img2', 'card') + '</div></div>';
     }).join('');
@@ -524,6 +555,8 @@
     switch (act.dataset.act) {
       case 'add-code': ch.ch1.codes.push({ img: '', text: '' }); break;
       case 'del-code': ch.ch1.codes.splice(i, 1); if (!ch.ch1.codes.length) ch.ch1.codes.push({ img: '', text: '' }); break;
+      case 'fc-add': if (ch.ch1.friendCards.length < 3) ch.ch1.friendCards.push({ img: '', text: '' }); break;
+      case 'fc-del': if (ch.ch1.friendCards.length > 1) ch.ch1.friendCards.splice(i, 1); break;
       case 'add-card': ch.ch2.cards.push({ img: '', img2: '' }); break;
       case 'del-card': ch.ch2.cards.splice(i, 1); break;
     }
@@ -573,7 +606,9 @@
       ch.ch1.friendCards[0] = ch.ch1.friendCard;
     }
     fill(ch.ch1, defaults1());
-    while (ch.ch1.friendCards.length < 3) ch.ch1.friendCards.push({ img: '', text: '' });
+    var fcs = ch.ch1.friendCards = ch.ch1.friendCards.slice(0, 3);
+    while (fcs.length > 1 && !fcs[fcs.length - 1].img && !fcs[fcs.length - 1].text) fcs.pop();
+    if (!fcs.length) fcs.push({ img: '', text: '' });
     ch.ch2 = ch.ch2 || {};
     fill(ch.ch2, defaults2());
     var h = Number(location.hash.replace('#', ''));

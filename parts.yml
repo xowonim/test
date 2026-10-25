@@ -1,0 +1,59 @@
+name: Update parts list
+
+on:
+  push:
+    paths:
+      - 'images/parts/**'
+      - '.github/workflows/parts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate parts.json
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, time
+
+          ROOT = 'images/parts'
+          EXT = ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg')
+
+          def run(*args):
+              return subprocess.check_output(args, text=True).strip()
+
+          out = {}
+          if os.path.isdir(ROOT):
+              for folder in sorted(os.listdir(ROOT)):
+                  base = os.path.join(ROOT, folder)
+                  if not os.path.isdir(base):
+                      continue
+                  items = []
+                  for name in sorted(os.listdir(base)):
+                      if not name.lower().endswith(EXT):
+                          continue
+                      path = os.path.join(base, name)
+                      sha = run('git', 'hash-object', path)
+                      times = run('git', 'log', '--follow', '--diff-filter=A', '--format=%ct', '--', path).splitlines()
+                      d = int(times[-1]) * 1000 if times else int(time.time() * 1000)
+                      items.append({'n': name, 's': sha, 'd': d})
+                  items.sort(key=lambda x: (x['d'], x['n']))
+                  out[folder] = items
+
+          with open('parts.json', 'w', encoding='utf-8') as fp:
+              json.dump({'folders': out}, fp, ensure_ascii=False, indent=1)
+          PY
+
+      - name: Commit parts.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add parts.json
+          git diff --cached --quiet || (git commit -m "Update parts.json" && git push)
