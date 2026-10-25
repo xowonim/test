@@ -11,7 +11,7 @@
     images/parts/haircolor   헤어 컬러
     images/parts/eyecolor    아이 컬러
     images/parts/meshtype    메시 타입
-    images/parts/meshcolor   메시 컬러
+    (메시 컬러는 haircolor 폴더를 함께 씁니다. meshcolor 폴더는 필요 없습니다.)
     images/parts/hairdeco    헤어 데코
     images/parts/makeup      메이크업
     images/parts/onepoint    원 포인트
@@ -38,6 +38,11 @@ window.REPO = {
 
 /* 파츠 이미지 폴더 (저장소 기준 경로, 항목 폴더의 윗단계까지만 적습니다) */
 window.PARTS_DIR = 'images/parts';
+
+/* 같은 폴더를 함께 쓰는 항목 (항목: 사용할 폴더). 선택값은 항목마다 따로 저장됩니다. */
+window.PARTS_SHARE = {
+  meshcolor: 'haircolor'
+};
 
 /* 선택형 항목 (tone: blue / green / red / gray) */
 window.OPTIONS = {

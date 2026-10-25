@@ -65,7 +65,8 @@
   }
   /* ---------- 파츠 이미지 (깃허브 폴더에서 자동 읽기) ---------- */
   var CACHE_MS = 5 * 60 * 1000;
-  function folderOf(key) { var m = window.PARTS_SHARE || {}; return m[key] || key; }
+  var DEFAULT_SHARE = { meshcolor: 'haircolor' };
+  function folderOf(key) { var m = window.PARTS_SHARE || {}; return m[key] || DEFAULT_SHARE[key] || key; }
   function partsDir() { return String(window.PARTS_DIR || 'images/parts').replace(/^\/+|\/+$/g, ''); }
   function partImg(key, file) { return partsDir() + '/' + folderOf(key) + '/' + encodeURIComponent(file); }
   /* 파일 이름 규칙: [정렬번호 + 구분기호] 이름 [__설명].확장자
@@ -154,6 +155,8 @@
     var ck = 'parts3:' + folder, cached = null;
     try { cached = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) {}
     if (!force && cached && Date.now() - cached.t < CACHE_MS) return Promise.resolve(cached.list);
+    /* 비어 있는 폴더는 조회할 때마다 한도를 쓰므로 잠시 기억해 둡니다. */
+    if (cached && cached.empty && Date.now() - cached.t < 30000) return Promise.resolve(cached.list);
 
     var r = repoInfo();
     if (!r.owner || !r.repo) {
@@ -161,7 +164,10 @@
       return Promise.reject(new Error('저장소 정보를 알 수 없습니다. parts-data.js의 REPO를 채워 주세요.'));
     }
     function finish(list, etag) {
-      if (!list.length) return Promise.resolve(list);
+      if (!list.length) {
+        try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: [], empty: true })); } catch (e) {}
+        return Promise.resolve(list);
+      }
       return loadDates(r, folder).then(function (dates) {
         list.forEach(function (it) {
           var d = dates[partsDir() + '/' + folder + '/' + it.n];
@@ -184,7 +190,8 @@
     return fetch(url, { headers: headers }).then(function (res) {
       if (res.status === 304 && cached) return { notModified: true };
       if (res.status === 404) return [];
-      if (!res.ok) throw new Error('목록을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.');
+      if (res.status === 403 || res.status === 429) throw new Error('잠시 후 다시 열어 주세요.');
+      if (!res.ok) throw new Error('불러오지 못했습니다.');
       etag = res.headers.get('ETag') || '';
       return res.json();
     }).then(function (data) {
