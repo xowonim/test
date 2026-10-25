@@ -119,16 +119,18 @@ select.field { appearance: none; -webkit-appearance: none; text-align: center; t
 .mini.add { margin: 6px; }
 .icon-btn { border: 0; background: none; padding: 0 6px; font-size: 18px; line-height: 1; color: #b5b5b5; cursor: pointer; flex: none; }
 .icon-btn:active { color: #888; }
-.flab { position: relative; }
-.flab .icon-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+.icon-btn { background: transparent !important; border: 0 !important; box-shadow: none !important; }
 .fcol { position: relative; }
-.fcol .icon-btn { position: absolute; top: 4px; right: 6px; z-index: 2; }
+.fone { position: relative; }
+.fone .fc-x { position: absolute; top: 2px; right: 6px; z-index: 2; font-size: 20px; }
+.fcol.fadd { display: flex; align-items: center; justify-content: center; background: #fff; }
+.fcol.fadd .fc-plus { font-size: 28px; padding: 24px 40px; color: #ccc; }
 
 /* 프렌드카드 (표 아래) */
 .fthree { display: grid; }
 .fcol { border-right: 1px solid var(--line); min-width: 0; }
 .fcol:last-child { border-right: 0; }
-.fone { width: min(220px, 100%); margin: 0 auto; padding: 10px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+.fone { width: min(220px, 100%); margin: 0 auto; padding: 24px 10px 10px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
 .fone .slot.card { border: 1px solid #ddd; }
 .fone .field { border: 1px solid #ddd; padding: 6px; resize: vertical; }
 .ch2 .friends { margin-top: 0; }

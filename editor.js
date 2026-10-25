@@ -395,11 +395,12 @@
     var fn = c.friendCards.length;
     var friendCols = c.friendCards.map(function (card, i) {
       var t = card.text || '';
-      return '<div class="fcol">' +
-        (fn > 1 ? '<button type="button" class="icon-btn" data-act="fc-del" data-i="' + i + '" aria-label="삭제">×</button>' : '') +
-        '<div class="fone">' + slot('ch1.friendCards.' + i + '.img', 'card') +
+      return '<div class="fcol"><div class="fone">' +
+        (fn > 1 ? '<button type="button" class="icon-btn fc-x" data-act="fc-del" data-i="' + i + '" aria-label="삭제">×</button>' : '') +
+        slot('ch1.friendCards.' + i + '.img', 'card') +
         '<textarea class="field" data-bind="ch1.friendCards.' + i + '.text" rows="2">' + esc(t) + '</textarea></div></div>';
-    }).join('');
+    }).join('') + (fn < 3 ? '<div class="fcol fadd"><button type="button" class="icon-btn fc-plus" data-act="fc-add" aria-label="추가">+</button></div>' : '');
+    var fcols = fn + (fn < 3 ? 1 : 0);
 
     var codes = c.codes.map(function (r, i) {
       return '<div class="code-row">' + slot('ch1.codes.' + i + '.img', 'small') +
@@ -425,9 +426,8 @@
             '<textarea class="field" data-bind="ch1.etc" rows="4">' + esc(c.etc) + '</textarea></div>' +
         '</div>' +
       '</div>' +
-      '<section class="friends"><div class="lab flab">프렌드카드' +
-        (fn < 3 ? '<button type="button" class="icon-btn" data-act="fc-add" aria-label="추가">+</button>' : '') + '</div>' +
-        '<div class="fthree" style="grid-template-columns:repeat(' + fn + ',minmax(0,1fr))">' + friendCols + '</div></section>' +
+      '<section class="friends"><div class="lab flab">프렌드카드</div>' +
+        '<div class="fthree" style="grid-template-columns:repeat(' + fcols + ',minmax(0,1fr))">' + friendCols + '</div></section>' +
     '</div>';
   }
 
