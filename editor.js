@@ -36,7 +36,7 @@
   function defaults1() {
     return {
       parts: {}, qr: '', coordi: '', song: '', buzz: '', record: '', etc: '',
-      codes: [{ img: '', text: '' }],
+      outfits: [{ img: '' }],
       friendCards: [{ img: '', text: '' }]
     };
   }
@@ -402,11 +402,13 @@
     }).join('') + (fn < 3 ? '<div class="fcol fadd"><button type="button" class="icon-btn fc-plus" data-act="fc-add" aria-label="추가">+</button></div>' : '');
     var fcols = fn + (fn < 3 ? 1 : 0);
 
-    var codes = c.codes.map(function (r, i) {
-      return '<div class="code-row">' + slot('ch1.codes.' + i + '.img', 'small') +
-        '<input class="field" data-bind="ch1.codes.' + i + '.text" value="' + esc(r.text) + '" placeholder="코드">' +
-        '<button type="button" class="icon-btn" data-act="del-code" data-i="' + i + '" aria-label="삭제">×</button></div>';
-    }).join('');
+    var on = c.outfits.length;
+    var outCols = c.outfits.map(function (o, i) {
+      return '<div class="fcol"><div class="fone">' +
+        (on > 1 ? '<button type="button" class="icon-btn fc-x" data-act="oc-del" data-i="' + i + '" aria-label="삭제">×</button>' : '') +
+        slot('ch1.outfits.' + i + '.img', 'card') + '</div></div>';
+    }).join('') + (on < 3 ? '<div class="fcol fadd"><button type="button" class="icon-btn fc-plus" data-act="oc-add" aria-label="추가">+</button></div>' : '');
+    var ocols = on + (on < 3 ? 1 : 0);
 
 
     return '<div class="ch1">' +
@@ -414,16 +416,18 @@
         '<div class="grid7">' + row1 + row2 + '</div>' +
         '<div class="bottom">' +
           '<div class="coordi">' + slot('ch1.coordi', 'big') + '<div class="lab">라이브용 코디</div></div>' +
-          '<div class="meta">' +
-            '<div class="lab">악곡</div>' +
-            '<input class="field tone" data-bind="ch1.song" list="songs" value="' + esc(c.song) + '" data-tone="' + (c.song ? 'blue' : '') + '" data-kind="song">' +
-            '<div class="lab">버즈리움</div>' + selectHtml('buzz', 'ch1.buzz') +
-            '<div class="lab">녹화</div>' + selectHtml('record', 'ch1.record') +
+          '<div class="rside">' +
+            '<div class="trio">' +
+              '<div class="tcell"><div class="lab">악곡</div>' +
+                '<input class="field tone" data-bind="ch1.song" list="songs" value="' + esc(c.song) + '" data-tone="' + (c.song ? 'blue' : '') + '" data-kind="song"></div>' +
+              '<div class="tcell"><div class="lab">버즈리움</div>' + selectHtml('buzz', 'ch1.buzz') + '</div>' +
+              '<div class="tcell"><div class="lab">녹화</div>' + selectHtml('record', 'ch1.record') + '</div>' +
+            '</div>' +
+            '<div class="lab blk">기타</div>' +
+            '<textarea class="field etc-t" data-bind="ch1.etc" rows="4">' + esc(c.etc) + '</textarea>' +
+            '<div class="lab blk">등록 코디</div>' +
+            '<div class="fthree" style="grid-template-columns:repeat(' + ocols + ',minmax(0,1fr))">' + outCols + '</div>' +
           '</div>' +
-          '<div class="codes"><div class="lab">등록 코드</div><div class="code-list">' + codes + '</div>' +
-            '<button type="button" class="mini add" data-act="add-code">+ 추가</button></div>' +
-          '<div class="etc"><div class="vlab">기타</div>' +
-            '<textarea class="field" data-bind="ch1.etc" rows="4">' + esc(c.etc) + '</textarea></div>' +
         '</div>' +
       '</div>' +
       '<section class="friends"><div class="lab flab">프렌드카드</div>' +
@@ -553,8 +557,8 @@
     if (!act) return;
     var i = Number(act.dataset.i);
     switch (act.dataset.act) {
-      case 'add-code': ch.ch1.codes.push({ img: '', text: '' }); break;
-      case 'del-code': ch.ch1.codes.splice(i, 1); if (!ch.ch1.codes.length) ch.ch1.codes.push({ img: '', text: '' }); break;
+      case 'oc-add': if (ch.ch1.outfits.length < 3) ch.ch1.outfits.push({ img: '' }); break;
+      case 'oc-del': if (ch.ch1.outfits.length > 1) ch.ch1.outfits.splice(i, 1); break;
       case 'fc-add': if (ch.ch1.friendCards.length < 3) ch.ch1.friendCards.push({ img: '', text: '' }); break;
       case 'fc-del': if (ch.ch1.friendCards.length > 1) ch.ch1.friendCards.splice(i, 1); break;
       case 'add-card': ch.ch2.cards.push({ img: '', img2: '' }); break;
@@ -609,6 +613,9 @@
     var fcs = ch.ch1.friendCards = ch.ch1.friendCards.slice(0, 3);
     while (fcs.length > 1 && !fcs[fcs.length - 1].img && !fcs[fcs.length - 1].text) fcs.pop();
     if (!fcs.length) fcs.push({ img: '', text: '' });
+    var ocs = ch.ch1.outfits = ch.ch1.outfits.slice(0, 3);
+    while (ocs.length > 1 && !ocs[ocs.length - 1].img) ocs.pop();
+    if (!ocs.length) ocs.push({ img: '' });
     ch.ch2 = ch.ch2 || {};
     fill(ch.ch2, defaults2());
     var h = Number(location.hash.replace('#', ''));
