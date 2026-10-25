@@ -106,16 +106,25 @@
     }
     var url = 'https://api.github.com/repos/' + r.owner + '/' + r.repo + '/contents/' + partsDir() + '/' + key +
       (r.branch ? '?ref=' + encodeURIComponent(r.branch) : '');
-    return fetch(url).then(function (res) {
+    var headers = {};
+    if (cached && cached.etag) headers['If-None-Match'] = cached.etag;
+    var etag = '';
+    return fetch(url, { headers: headers }).then(function (res) {
+      if (res.status === 304 && cached) return { notModified: true };
       if (res.status === 404) return [];
-      if (!res.ok) throw new Error('목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.');
+      if (!res.ok) throw new Error('목록을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.');
+      etag = res.headers.get('ETag') || '';
       return res.json();
     }).then(function (data) {
+      if (data && data.notModified) {
+        try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: cached.list, etag: cached.etag })); } catch (e) {}
+        return cached.list;
+      }
       var list = (Array.isArray(data) ? data : []).filter(function (f) {
         return f.type === 'file' && /\.(png|jpe?g|webp|gif|svg)$/i.test(f.name);
       }).map(function (f) { return { n: f.name, s: f.sha }; });
       sortParts(list);
-      if (list.length) { try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: list })); } catch (e) {} }
+      if (list.length) { try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: list, etag: etag })); } catch (e) {} }
       return list;
     }).catch(function (err) {
       if (cached) return cached.list;
@@ -287,12 +296,14 @@
   function openPicker(key, force) {
     pickKey = key;
     $pickTitle.textContent = labelOf(key) + ' 선택';
-    $pickGrid.innerHTML = '<p class="empty">불러오는 중</p>';
+    if (partLists[key]) renderPickList(key, partLists[key]);
+    else $pickGrid.innerHTML = '<p class="empty">불러오는 중</p>';
     $picker.hidden = false;
     document.body.style.overflow = 'hidden';
-    loadParts(key, force).then(function (list) {
+    loadParts(key, true).then(function (list) {
+      var changed = JSON.stringify(partLists[key]) !== JSON.stringify(list);
       partLists[key] = list;
-      if (pickKey === key) renderPickList(key, list);
+      if (pickKey === key && changed) renderPickList(key, list);
     }).catch(function (err) {
       if (pickKey === key) $pickGrid.innerHTML = '<p class="empty">' + esc(err.message) + '</p>';
     });
@@ -304,21 +315,18 @@
   $pickGrid.addEventListener('click', function (e) {
     var b = e.target.closest('.pick-item');
     if (!b || !pickKey) return;
-    var list = partLists[pickKey] || [];
-    var sha = '';
-    for (var i = 0; i < list.length; i++) if (list[i].n === b.dataset.pid) sha = list[i].s;
-    ch.ch1.parts[pickKey] = { f: b.dataset.pid, s: sha };
+    var cur = resolveSel(pickKey);
+    if (cur && !cur.pending && cur.n === b.dataset.pid) {
+      delete ch.ch1.parts[pickKey];
+    } else {
+      var list = partLists[pickKey] || [];
+      var sha = '';
+      for (var i = 0; i < list.length; i++) if (list[i].n === b.dataset.pid) sha = list[i].s;
+      ch.ch1.parts[pickKey] = { f: b.dataset.pid, s: sha };
+    }
     touch(); render();
   });
   document.getElementById('pickClose').addEventListener('click', closePicker);
-  document.getElementById('pickRefresh').addEventListener('click', function () {
-    if (pickKey) openPicker(pickKey, true);
-  });
-  document.getElementById('pickClear').addEventListener('click', function () {
-    if (!pickKey) return;
-    delete ch.ch1.parts[pickKey];
-    touch(); render();
-  });
 
   /* ---------- 이미지 업로드 ---------- */
   function resize(file, max) {

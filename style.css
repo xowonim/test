@@ -15,7 +15,7 @@ body {
   background: #fff;
   -webkit-text-size-adjust: 100%;
 }
-button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; border-radius: 0; -webkit-appearance: none; appearance: none; }
 button { cursor: pointer; }
 
 /* ---------- 홈 ---------- */
@@ -53,14 +53,14 @@ button { cursor: pointer; }
 
 .sheet { border: 2px solid var(--line); background: #fff; }
 .grid7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.cell { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.cell { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; display: flex; flex-direction: column; }
 .cell:nth-child(7n) { border-right: 0; }
 .cell .circle { margin: 4px; width: calc(100% - 8px); }
 .lab {
   background: var(--label); text-align: center; padding: 6px 2px;
-  font-size: clamp(9px, 2.1vw, 13px); font-weight: 500; border-top: 1px dotted var(--line); line-height: 1.2;
+  font-size: clamp(9px, 2.1vw, 13px); font-weight: 500; line-height: 1.2;
 }
-.cell .lab { display: flex; align-items: center; justify-content: center; min-height: 34px; }
+.cell .lab { display: flex; align-items: center; justify-content: center; min-height: 34px; flex: 1; }
 
 .circle {
   position: relative; display: block; aspect-ratio: 1;
@@ -81,7 +81,7 @@ button { cursor: pointer; }
   background: rgba(0, 0, 0, .55); color: #fff; font-style: normal; font-size: 14px; line-height: 20px; text-align: center;
 }
 .slot.big { aspect-ratio: 3 / 4; width: 100%; }
-.slot.small { width: 64px; height: 64px; border: 1px dashed #ddd; flex: none; }
+.slot.small { width: 64px; height: 64px; border: 1px solid #ddd; flex: none; }
 .slot.card { width: 100%; aspect-ratio: 3 / 4; }
 
 .bottom {
