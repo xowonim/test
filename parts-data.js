@@ -44,6 +44,18 @@ window.PARTS_SHARE = {
   meshcolor: 'haircolor'
 };
 
+/* 테마색: 부탁해 주얼(jewel)에서 고른 파츠 이름에 따라 모든 탭의 색이 바뀝니다.
+   이름은 파일 이름에서 정렬 번호와 확장자를 뺀 부분입니다. (예: 01_스키.webp -> 스키) */
+window.THEME_BASE = '#e9e9e9';   // 선택이 없을 때의 기본색 (연한 회색)
+window.THEME_COLORS = {
+  '스키': '#f9d8eb',
+  '유메': '#d6f2fa',
+  '유우죠': '#ddf5d9',
+  '유우키': '#fff2c2',
+  '죠네츠': '#f9d7dc',
+  '키보': '#e9ddfb'
+};
+
 /* 선택형 항목 (tone: blue / green / red / gray) */
 window.OPTIONS = {
   songs: [],       // 악곡 자동완성 목록 예: ['오마카세']

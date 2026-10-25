@@ -66,6 +66,11 @@
   /* ---------- 파츠 이미지 (깃허브 폴더에서 자동 읽기) ---------- */
   var CACHE_MS = 5 * 60 * 1000;
   var DEFAULT_SHARE = { meshcolor: 'haircolor' };
+  var DEFAULT_THEME = {
+    '스키': '#f9d8eb', '유메': '#d6f2fa', '유우죠': '#ddf5d9',
+    '유우키': '#fff2c2', '죠네츠': '#f9d7dc', '키보': '#e9ddfb'
+  };
+  var BASE_THEME = '#e9e9e9';
   function folderOf(key) { var m = window.PARTS_SHARE || {}; return m[key] || DEFAULT_SHARE[key] || key; }
   function partsDir() { return String(window.PARTS_DIR || 'images/parts').replace(/^\/+|\/+$/g, ''); }
   function partImg(key, file) { return partsDir() + '/' + folderOf(key) + '/' + encodeURIComponent(file); }
@@ -290,7 +295,19 @@
       }).catch(function () {});
     });
   }
+  /* 부탁해 주얼에서 고른 파츠 이름에 맞춰 테마색(--label)을 바꿉니다. 선택이 없으면 기본 회색입니다. */
+  function applyTheme() {
+    var map = window.THEME_COLORS || DEFAULT_THEME;
+    var color = window.THEME_BASE || BASE_THEME;
+    var r = ch && getSel('jewel') ? resolveSel('jewel') : null;
+    if (r) {
+      var name = partMeta(r.n).name;
+      if (map[name]) color = map[name];
+    }
+    document.documentElement.style.setProperty('--label', color);
+  }
   function refreshCell(key) {
+    if (key === 'jewel') applyTheme();
     var btn = document.querySelector('[data-part="' + key + '"]');
     if (!btn) return;
     var r = resolveSel(key);
@@ -400,6 +417,7 @@
 
   function render() {
     closePicker();
+    applyTheme();
     $panel.innerHTML = tab === 1 ? renderCh1() : tab === 2 ? renderCh2() : renderPlaceholder(tab);
     document.querySelectorAll('.tab').forEach(function (b) {
       b.classList.toggle('on', Number(b.dataset.tab) === tab);
