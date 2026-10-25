@@ -19,6 +19,7 @@
   var $pickTitle = document.getElementById('pickTitle');
   var $status = document.getElementById('status');
   var $file = document.getElementById('fileInput');
+  var $name = document.getElementById('nameInput');
 
   var ch = null;
   var tab = 1;
@@ -29,15 +30,18 @@
   function blank() {
     return {
       id: id, name: '', createdAt: Date.now(), updatedAt: Date.now(),
-      ch1: defaults1(), ch2: {}, ch3: {}
+      ch1: defaults1(), ch2: defaults2(), ch3: {}
     };
   }
   function defaults1() {
     return {
       parts: {}, qr: '', coordi: '', song: '', buzz: '', record: '', etc: '',
       codes: [{ img: '', text: '' }],
-      friendCards: [{ img: '', text: '' }, { img: '', text: '' }, { img: '', text: '' }, { img: '', text: '' }]
+      friendCard: { img: '', text: '' }
     };
+  }
+  function defaults2() {
+    return { cards: [{ img: '', img2: '' }, { img: '', img2: '' }, { img: '', img2: '' }] };
   }
   function fill(target, def) {
     Object.keys(def).forEach(function (k) {
@@ -229,11 +233,6 @@
         '<button type="button" class="mini" data-act="del-code" data-i="' + i + '">삭제</button></div>';
     }).join('');
 
-    var cards = c.friendCards.map(function (r, i) {
-      return '<div class="card-row"><div class="no">' + (i + 1) + '</div>' +
-        slot('ch1.friendCards.' + i + '.img', 'card') +
-        '<button type="button" class="mini" data-act="del-card" data-i="' + i + '">삭제</button></div>';
-    }).join('');
 
     return '<div class="ch1">' +
       '<div class="sheet">' +
@@ -252,22 +251,30 @@
             '<textarea class="field" data-bind="ch1.etc" rows="4">' + esc(c.etc) + '</textarea></div>' +
         '</div>' +
       '</div>' +
-      '<aside class="side">' +
-        '<input class="name-input" data-bind="name" value="' + esc(ch.name) + '" placeholder="캐릭터 이름">' +
-        '<div class="lab">프렌드카드</div>' + cards +
-        '<button type="button" class="mini add" data-act="add-card">+ 행 추가</button>' +
-      '</aside>' +
+      '<section class="friends"><div class="lab">프렌드카드</div>' +
+        '<div class="fone">' + slot('ch1.friendCard.img', 'card') +
+        '<textarea class="field" data-bind="ch1.friendCard.text" rows="2">' + esc(c.friendCard.text) + '</textarea></div></section>' +
     '</div>';
   }
 
+  function renderCh2() {
+    var cards = ch.ch2.cards.map(function (r, i) {
+      return '<div class="fcard"><div class="fhead"><span class="no">' + (i + 1) + '</span>' +
+        '<button type="button" class="mini" data-act="del-card" data-i="' + i + '">삭제</button></div>' +
+        '<div class="fslots">' + slot('ch2.cards.' + i + '.img', 'card') +
+        slot('ch2.cards.' + i + '.img2', 'card') + '</div></div>';
+    }).join('');
+    return '<div class="ch2"><div class="friends"><div class="friend-grid">' + cards + '</div>' +
+      '<button type="button" class="mini add" data-act="add-card">+ 추가</button></div></div>';
+  }
+
   function renderPlaceholder(n) {
-    return '<div class="ph"><input class="name-input" data-bind="name" value="' + esc(ch.name) +
-      '" placeholder="캐릭터 이름"><p>챕터 ' + n + ' 내용은 준비 중입니다.</p></div>';
+    return '<div class="ph"><p>챕터 ' + n + ' 내용은 준비 중입니다.</p></div>';
   }
 
   function render() {
     closePicker();
-    $panel.innerHTML = tab === 1 ? renderCh1() : renderPlaceholder(tab);
+    $panel.innerHTML = tab === 1 ? renderCh1() : tab === 2 ? renderCh2() : renderPlaceholder(tab);
     document.querySelectorAll('.tab').forEach(function (b) {
       b.classList.toggle('on', Number(b.dataset.tab) === tab);
     });
@@ -374,8 +381,8 @@
     switch (act.dataset.act) {
       case 'add-code': ch.ch1.codes.push({ img: '', text: '' }); break;
       case 'del-code': ch.ch1.codes.splice(i, 1); if (!ch.ch1.codes.length) ch.ch1.codes.push({ img: '', text: '' }); break;
-      case 'add-card': ch.ch1.friendCards.push({ img: '', text: '' }); break;
-      case 'del-card': ch.ch1.friendCards.splice(i, 1); break;
+      case 'add-card': ch.ch2.cards.push({ img: '', img2: '' }); break;
+      case 'del-card': ch.ch2.cards.splice(i, 1); break;
     }
     touch(); render();
   });
@@ -404,14 +411,23 @@
     Store.del(id).then(function () { location.href = 'index.html'; });
   });
 
+  $name.addEventListener('input', function () {
+    if (!ch) return;
+    ch.name = $name.value;
+    touch();
+  });
+
   /* ---------- 시작 ---------- */
   var songs = document.getElementById('songs');
   songs.innerHTML = (OPTIONS.songs || []).map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
 
   Store.get(id).catch(function () { return null; }).then(function (saved) {
     ch = saved || blank();
+    $name.value = ch.name || '';
     ch.ch1 = ch.ch1 || {};
     fill(ch.ch1, defaults1());
+    ch.ch2 = ch.ch2 || {};
+    fill(ch.ch2, defaults2());
     var h = Number(location.hash.replace('#', ''));
     if (h >= 1 && h <= 3) tab = h;
     setStatus(saved ? '저장됨' : '');
