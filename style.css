@@ -92,7 +92,7 @@ button { cursor: pointer; }
 
 .bottom { display: grid; grid-template-columns: 2fr 5fr; }
 .coordi { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
-.coordi .lab { margin-top: auto; }
+.coordi .slot.big { margin: auto; }
 .rside { min-width: 0; display: flex; flex-direction: column; }
 .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
 .tcell { border-right: 1px solid var(--line); min-width: 0; display: flex; flex-direction: column; }
@@ -111,19 +111,18 @@ select.field { appearance: none; -webkit-appearance: none; text-align: center; t
 .icon-btn { border: 0; background: none; padding: 0 6px; font-size: 18px; line-height: 1; color: #b5b5b5; cursor: pointer; flex: none; }
 .icon-btn:active { color: #888; }
 .icon-btn { background: transparent !important; border: 0 !important; box-shadow: none !important; }
-.fcol { position: relative; }
-.fone { position: relative; }
-.fone .fc-x { position: absolute; top: 2px; right: 6px; z-index: 2; font-size: 20px; }
-.fcol.fadd { display: flex; align-items: center; justify-content: center; background: #fff; }
+.fcol { position: relative; display: flex; align-items: flex-start; justify-content: center; }
+.fcol .fc-x { position: absolute; top: 4px; right: 6px; z-index: 2; font-size: 20px; }
+.fcol.fadd { background: #fff; align-items: center; }
 .fcol.fadd .fc-plus { font-size: 28px; padding: 24px 40px; color: #ccc; }
 
 /* 프렌드카드 (표 아래) */
 .fthree { display: grid; }
-.fcol { border-right: 1px solid var(--line); min-width: 0; }
-.fcol:last-child { border-right: 0; }
-.fone { width: min(220px, 100%); margin: 0 auto; padding: 24px 10px 10px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+.fcol { min-width: 0; }
+.fone { width: min(220px, 100%); margin: 0 auto; padding: 26px 10px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
 .fone .slot.card { border: 1px solid #ddd; }
-.fone .field { border: 1px solid #ddd; padding: 6px; resize: vertical; }
+.tbox { border: 1px solid #ddd; min-height: 44px; display: flex; align-items: center; justify-content: center; background: #fff; }
+.tbox textarea { border: 0; background: transparent; padding: 6px; width: 100%; text-align: center; resize: none; overflow: hidden; outline: none; line-height: 1.4; }
 .ch2 .friends { margin-top: 0; }
 .friends { border: 1px solid var(--line); background: #fff; margin-top: 18px; overflow: hidden; }
 .friends > .lab { border-bottom: 1px solid var(--line); }

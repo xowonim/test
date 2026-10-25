@@ -395,18 +395,18 @@
     var fn = c.friendCards.length;
     var friendCols = c.friendCards.map(function (card, i) {
       var t = card.text || '';
-      return '<div class="fcol"><div class="fone">' +
+      return '<div class="fcol">' +
         (fn > 1 ? '<button type="button" class="icon-btn fc-x" data-act="fc-del" data-i="' + i + '" aria-label="삭제">×</button>' : '') +
-        slot('ch1.friendCards.' + i + '.img', 'card') +
-        '<textarea class="field" data-bind="ch1.friendCards.' + i + '.text" rows="2">' + esc(t) + '</textarea></div></div>';
+        '<div class="fone">' + slot('ch1.friendCards.' + i + '.img', 'card') +
+        '<div class="tbox"><textarea class="field" data-bind="ch1.friendCards.' + i + '.text" rows="1">' + esc(t) + '</textarea></div></div></div>';
     }).join('') + (fn < 3 ? '<div class="fcol fadd"><button type="button" class="icon-btn fc-plus" data-act="fc-add" aria-label="추가">+</button></div>' : '');
     var fcols = fn + (fn < 3 ? 1 : 0);
 
     var on = c.outfits.length;
     var outCols = c.outfits.map(function (o, i) {
-      return '<div class="fcol"><div class="fone">' +
+      return '<div class="fcol">' +
         (on > 1 ? '<button type="button" class="icon-btn fc-x" data-act="oc-del" data-i="' + i + '" aria-label="삭제">×</button>' : '') +
-        slot('ch1.outfits.' + i + '.img', 'card') + '</div></div>';
+        '<div class="fone">' + slot('ch1.outfits.' + i + '.img', 'card') + '</div></div>';
     }).join('') + (on < 3 ? '<div class="fcol fadd"><button type="button" class="icon-btn fc-plus" data-act="oc-add" aria-label="추가">+</button></div>' : '');
     var ocols = on + (on < 3 ? 1 : 0);
 
@@ -457,7 +457,15 @@
     document.querySelectorAll('.tab').forEach(function (b) {
       b.classList.toggle('on', Number(b.dataset.tab) === tab);
     });
+    autosizeAll();
   }
+
+  /* 프렌드카드 글칸: 내용 높이에 맞추고, 칸 안에서 가운데 정렬 */
+  function autosize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+  function autosizeAll() {
+    $panel.querySelectorAll('.tbox textarea').forEach(autosize);
+  }
+  window.addEventListener('resize', autosizeAll);
 
   /* ---------- 파츠 선택 패널 ---------- */
   function labelOf(key) {
@@ -571,6 +579,7 @@
     var el = e.target.closest('[data-bind]');
     if (!el) return;
     setPath(ch, el.dataset.bind, el.value);
+    if (el.closest('.tbox')) autosize(el);
     if (el.classList.contains('tone')) {
       var kind = el.dataset.kind;
       el.dataset.tone = kind === 'song' ? (el.value ? 'blue' : '') : toneOf(kind, el.value);
