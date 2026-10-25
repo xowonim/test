@@ -62,10 +62,26 @@
   /* ---------- 파츠 이미지 (깃허브 폴더에서 자동 읽기) ---------- */
   var CACHE_MS = 5 * 60 * 1000;
   function partImg(key, file) { return 'images/parts/' + key + '/' + encodeURIComponent(file); }
+  /* 파일 이름 규칙: [정렬번호 + 구분기호] 이름 [__설명].확장자
+     예) 01_ひたむき__설명.webp -> 번호 1(정렬용, 표시 안 됨), 이름 ひたむき, 설명 설명 */
   function partMeta(file) {
     var base = file.replace(/\.[^.]+$/, '');
+    var order = Infinity;
+    var m = base.match(/^(\d+)[ _.\-]+(.+)$/);
+    if (m) { order = parseInt(m[1], 10); base = m[2]; }
     var i = base.indexOf('__');
-    return { id: file, name: i >= 0 ? base.slice(0, i) : base, info: i >= 0 ? base.slice(i + 2) : '' };
+    return {
+      id: file, order: order,
+      name: (i >= 0 ? base.slice(0, i) : base).trim(),
+      info: i >= 0 ? base.slice(i + 2).trim() : ''
+    };
+  }
+  function sortParts(list) {
+    return list.sort(function (a, b) {
+      var ma = partMeta(a.n), mb = partMeta(b.n);
+      if (ma.order !== mb.order) return ma.order < mb.order ? -1 : 1;
+      return a.n.localeCompare(b.n, 'ko', { numeric: true });
+    });
   }
   function repoInfo() {
     var m = location.hostname.match(/^(.+)\.github\.io$/);
@@ -78,7 +94,7 @@
     return { owner: owner, repo: repo, branch: REPO.branch || '' };
   }
   function loadParts(key, force) {
-    var ck = 'parts:' + key, cached = null;
+    var ck = 'parts2:' + key, cached = null;
     try { cached = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) {}
     if (!force && cached && Date.now() - cached.t < CACHE_MS) return Promise.resolve(cached.list);
 
@@ -96,14 +112,53 @@
     }).then(function (data) {
       var list = (Array.isArray(data) ? data : []).filter(function (f) {
         return f.type === 'file' && /\.(png|jpe?g|webp|gif|svg)$/i.test(f.name);
-      }).map(function (f) { return f.name; })
-        .sort(function (a, b) { return a.localeCompare(b, 'ko', { numeric: true }); });
+      }).map(function (f) { return { n: f.name, s: f.sha }; });
+      sortParts(list);
       try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: list })); } catch (e) {}
       return list;
     }).catch(function (err) {
       if (cached) return cached.list;
       throw err;
     });
+  }
+
+  /* 선택한 파츠 = { f: 파일 이름, s: 이미지 고유값(sha) }
+     파일 이름이 바뀌어도 이미지 고유값이 같으면 같은 파츠로 이어 줍니다. */
+  var partLists = {};
+  function getSel(key) {
+    var v = ch.ch1.parts[key];
+    if (!v) return null;
+    return typeof v === 'string' ? { f: v, s: '' } : v;
+  }
+  function resolveSel(key) {
+    var sel = getSel(key);
+    if (!sel) return null;
+    var list = partLists[key];
+    if (!list) return { n: sel.f, s: sel.s, pending: true };
+    for (var i = 0; i < list.length; i++) if (list[i].n === sel.f) return list[i];
+    if (sel.s) for (var j = 0; j < list.length; j++) if (list[j].s === sel.s) return list[j];
+    return null;
+  }
+  function syncSelections() {
+    PART_ITEMS.forEach(function (it) {
+      var key = it[0];
+      if (it[2] || !getSel(key)) return;
+      loadParts(key).then(function (list) {
+        partLists[key] = list;
+        var sel = getSel(key), r = resolveSel(key);
+        if (r && !r.pending && (r.n !== sel.f || r.s !== sel.s)) {
+          ch.ch1.parts[key] = { f: r.n, s: r.s };
+          touch();
+        }
+        refreshCell(key);
+      }).catch(function () {});
+    });
+  }
+  function refreshCell(key) {
+    var btn = document.querySelector('[data-part="' + key + '"]');
+    if (!btn) return;
+    var r = resolveSel(key);
+    btn.innerHTML = imgTag(r ? partImg(key, r.n) : '');
   }
   function toneOf(kind, val) {
     var list = OPTIONS[kind] || [];
@@ -133,8 +188,8 @@
       inner = '<div class="circle slot" data-up="ch1.qr">' + imgTag(ch.ch1.qr) +
         (ch.ch1.qr ? '<i class="x" data-clear="ch1.qr">×</i>' : '') + '</div>';
     } else {
-      var file = ch.ch1.parts[key];
-      inner = '<button type="button" class="circle" data-part="' + key + '">' + imgTag(file ? partImg(key, file) : '') + '</button>';
+      var r = resolveSel(key);
+      inner = '<button type="button" class="circle" data-part="' + key + '">' + imgTag(r ? partImg(key, r.n) : '') + '</button>';
     }
     return '<div class="cell">' + inner + '<div class="lab">' + label + '</div></div>';
   }
@@ -214,12 +269,14 @@
     return key;
   }
   function renderPickList(key, list) {
-    var cur = ch.ch1.parts[key];
+    var r = resolveSel(key);
+    var cur = r ? r.n : '';
     if (!list.length) {
       $pickGrid.innerHTML = '<p class="empty">이 항목에 올라온 이미지가 없습니다.</p>';
       return;
     }
-    $pickGrid.innerHTML = list.map(function (file) {
+    $pickGrid.innerHTML = list.map(function (item) {
+      var file = item.n;
       var p = partMeta(file);
       return '<button type="button" class="pick-item' + (file === cur ? ' on' : '') + '" data-pid="' + esc(file) + '">' +
         '<span class="circle sm">' + imgTag(partImg(key, file)) + '</span>' +
@@ -233,6 +290,7 @@
     $picker.hidden = false;
     $picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     loadParts(key, force).then(function (list) {
+      partLists[key] = list;
       if (pickKey === key) renderPickList(key, list);
     }).catch(function (err) {
       if (pickKey === key) $pickGrid.innerHTML = '<p class="empty">' + esc(err.message) + '</p>';
@@ -243,7 +301,10 @@
   $pickGrid.addEventListener('click', function (e) {
     var b = e.target.closest('.pick-item');
     if (!b || !pickKey) return;
-    ch.ch1.parts[pickKey] = b.dataset.pid;
+    var list = partLists[pickKey] || [];
+    var sha = '';
+    for (var i = 0; i < list.length; i++) if (list[i].n === b.dataset.pid) sha = list[i].s;
+    ch.ch1.parts[pickKey] = { f: b.dataset.pid, s: sha };
     touch(); render();
   });
   document.getElementById('pickClose').addEventListener('click', closePicker);
@@ -344,5 +405,6 @@
     if (h >= 1 && h <= 3) tab = h;
     setStatus(saved ? '저장됨' : '');
     render();
+    syncSelections();
   });
 })();
