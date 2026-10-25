@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>캐릭터 편집</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="editor">
+<div class="topbar">
+  <a class="back" href="index.html">← 홈</a>
+  <span id="status" class="status"></span>
+  <button id="btnDelete" class="ghost" type="button">삭제</button>
+</div>
+
+<main class="stage">
+  <nav class="tabs" id="tabs">
+    <button type="button" class="tab t1 on" data-tab="1" aria-label="챕터 1"><span class="num">1</span></button>
+    <button type="button" class="tab t2" data-tab="2" aria-label="챕터 2"><span class="num">2</span></button>
+    <button type="button" class="tab t3" data-tab="3" aria-label="챕터 3"><span class="num">3</span></button>
+  </nav>
+
+  <div class="box">
+    <div id="panel"></div>
+
+    <section id="picker" class="picker" hidden>
+      <header class="picker-head">
+        <strong id="pickTitle"></strong>
+        <span>
+          <button type="button" class="ghost" id="pickRefresh">새로고침</button>
+          <button type="button" class="ghost" id="pickClear">선택 해제</button>
+          <button type="button" class="ghost" id="pickClose">닫기</button>
+        </span>
+      </header>
+      <div id="pickGrid" class="pick-grid"></div>
+    </section>
+  </div>
+</main>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+<datalist id="songs"></datalist>
+
+<script src="storage.js"></script>
+<script src="parts-data.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>
