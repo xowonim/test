@@ -37,7 +37,7 @@
     return {
       parts: {}, qr: '', coordi: '', song: '', buzz: '', record: '', etc: '',
       codes: [{ img: '', text: '' }],
-      friendCard: { img: '', text: '' }
+      friendCards: [{ img: '', text: '' }, { img: '', text: '' }, { img: '', text: '' }]
     };
   }
   function defaults2() {
@@ -65,8 +65,9 @@
   }
   /* ---------- 파츠 이미지 (깃허브 폴더에서 자동 읽기) ---------- */
   var CACHE_MS = 5 * 60 * 1000;
+  function folderOf(key) { var m = window.PARTS_SHARE || {}; return m[key] || key; }
   function partsDir() { return String(window.PARTS_DIR || 'images/parts').replace(/^\/+|\/+$/g, ''); }
-  function partImg(key, file) { return partsDir() + '/' + key + '/' + encodeURIComponent(file); }
+  function partImg(key, file) { return partsDir() + '/' + folderOf(key) + '/' + encodeURIComponent(file); }
   /* 파일 이름 규칙: [정렬번호 + 구분기호] 이름 [__설명].확장자
      예) 01_ひたむき__설명.webp -> 번호 1(정렬용, 표시 안 됨), 이름 ひたむき, 설명 설명 */
   function partMeta(file) {
@@ -99,7 +100,7 @@
     return { owner: owner, repo: repo, branch: REPO.branch || '' };
   }
   function loadParts(key, force) {
-    var ck = 'parts2:' + key, cached = null;
+    var ck = 'parts2:' + folderOf(key), cached = null;
     try { cached = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) {}
     if (!force && cached && Date.now() - cached.t < CACHE_MS) return Promise.resolve(cached.list);
 
@@ -108,7 +109,7 @@
       if (cached) return Promise.resolve(cached.list);
       return Promise.reject(new Error('저장소 정보를 알 수 없습니다. parts-data.js의 REPO를 채워 주세요.'));
     }
-    var url = 'https://api.github.com/repos/' + r.owner + '/' + r.repo + '/contents/' + partsDir() + '/' + key +
+    var url = 'https://api.github.com/repos/' + r.owner + '/' + r.repo + '/contents/' + partsDir() + '/' + folderOf(key) +
       (r.branch ? '?ref=' + encodeURIComponent(r.branch) : '');
     var headers = {};
     if (cached && cached.etag) headers['If-None-Match'] = cached.etag;
@@ -227,6 +228,12 @@
     var row1 = PART_ITEMS.slice(0, 7).map(partCell).join('');
     var row2 = PART_ITEMS.slice(7).map(partCell).join('');
 
+    var friendCols = [0, 1, 2].map(function (i) {
+      var t = (c.friendCards[i] && c.friendCards[i].text) || '';
+      return '<div class="fcol"><div class="fone">' + slot('ch1.friendCards.' + i + '.img', 'card') +
+        '<textarea class="field" data-bind="ch1.friendCards.' + i + '.text" rows="2">' + esc(t) + '</textarea></div></div>';
+    }).join('');
+
     var codes = c.codes.map(function (r, i) {
       return '<div class="code-row">' + slot('ch1.codes.' + i + '.img', 'small') +
         '<input class="field" data-bind="ch1.codes.' + i + '.text" value="' + esc(r.text) + '" placeholder="코드">' +
@@ -251,9 +258,7 @@
             '<textarea class="field" data-bind="ch1.etc" rows="4">' + esc(c.etc) + '</textarea></div>' +
         '</div>' +
       '</div>' +
-      '<section class="friends"><div class="lab">프렌드카드</div>' +
-        '<div class="fone">' + slot('ch1.friendCard.img', 'card') +
-        '<textarea class="field" data-bind="ch1.friendCard.text" rows="2">' + esc(c.friendCard.text) + '</textarea></div></section>' +
+      '<section class="friends"><div class="lab">프렌드카드</div><div class="fthree">' + friendCols + '</div></section>' +
     '</div>';
   }
 
@@ -294,10 +299,8 @@
     }
     $pickGrid.innerHTML = list.map(function (item) {
       var file = item.n;
-      var p = partMeta(file);
       return '<button type="button" class="pick-item' + (file === cur ? ' on' : '') + '" data-pid="' + esc(file) + '">' +
-        '<span class="circle sm">' + imgTag(partImg(key, file)) + '</span>' +
-        '<b>' + esc(p.name) + '</b>' + (p.info ? '<small>' + esc(p.info) + '</small>' : '') + '</button>';
+        '<span class="circle sm">' + imgTag(partImg(key, file)) + '</span></button>';
     }).join('');
   }
   function openPicker(key, force) {
@@ -425,7 +428,12 @@
     ch = saved || blank();
     $name.value = ch.name || '';
     ch.ch1 = ch.ch1 || {};
+    if (ch.ch1.friendCard && !ch.ch1.friendCards) {
+      ch.ch1.friendCards = defaults1().friendCards;
+      ch.ch1.friendCards[0] = ch.ch1.friendCard;
+    }
     fill(ch.ch1, defaults1());
+    while (ch.ch1.friendCards.length < 3) ch.ch1.friendCards.push({ img: '', text: '' });
     ch.ch2 = ch.ch2 || {};
     fill(ch.ch2, defaults2());
     var h = Number(location.hash.replace('#', ''));

@@ -123,6 +123,9 @@ select.field { appearance: none; -webkit-appearance: none; }
 .mini.add { margin: 6px; }
 
 /* 프렌드카드 (표 아래) */
+.fthree { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fcol { border-right: 1px solid var(--line); min-width: 0; }
+.fcol:last-child { border-right: 0; }
 .fone { width: min(220px, 100%); margin: 0 auto; padding: 10px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
 .fone .slot.card { border: 1px solid #ddd; }
 .fone .field { border: 1px solid #ddd; padding: 6px; resize: vertical; }
