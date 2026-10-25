@@ -149,7 +149,7 @@
     });
   }
 
-  function loadParts(key, force) {
+  function loadPartsRaw(key, force) {
     var folder = folderOf(key);
     var ck = 'parts3:' + folder, cached = null;
     try { cached = JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) {}
@@ -161,6 +161,7 @@
       return Promise.reject(new Error('저장소 정보를 알 수 없습니다. parts-data.js의 REPO를 채워 주세요.'));
     }
     function finish(list, etag) {
+      if (!list.length) return Promise.resolve(list);
       return loadDates(r, folder).then(function (dates) {
         list.forEach(function (it) {
           var d = dates[partsDir() + '/' + folder + '/' + it.n];
@@ -200,6 +201,54 @@
       if (cached) return cached.list;
       throw err;
     });
+  }
+
+  /* 같은 폴더를 동시에 여러 번 요청하지 않도록 합칩니다. */
+  var inflight = {};
+  function loadParts(key, force) {
+    var f = folderOf(key) + (force ? '!' : '');
+    if (inflight[f]) return inflight[f];
+    var p = loadPartsRaw(key, force);
+    inflight[f] = p;
+    var done = function () { delete inflight[f]; };
+    p.then(done, done);
+    return p;
+  }
+  /* 저장해 둔 목록(오래된 것 포함)을 즉시 보여 주기 위한 용도 */
+  function cachedList(key) {
+    try {
+      var c = JSON.parse(localStorage.getItem('parts3:' + folderOf(key)) || 'null');
+      return c ? c.list : null;
+    } catch (e) { return null; }
+  }
+  function lazyImg(src) { return '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">'; }
+
+  /* 페이지를 열면 모든 항목의 목록과 이미지를 미리 받아 둡니다. */
+  function warmImages(urls) {
+    var i = 0;
+    function next() {
+      if (i >= urls.length) return;
+      var img = new Image();
+      img.onload = img.onerror = next;
+      img.src = urls[i++];
+    }
+    setTimeout(function () { next(); next(); }, 800);
+  }
+  function prefetchParts() {
+    var seen = {}, keys = [], urls = [];
+    PART_ITEMS.forEach(function (it) {
+      if (it[2]) return;
+      var f = folderOf(it[0]);
+      if (!seen[f]) { seen[f] = true; keys.push(it[0]); }
+    });
+    Promise.all(keys.map(function (key) {
+      return loadParts(key, false).then(function (list) {
+        PART_ITEMS.forEach(function (it) {
+          if (!it[2] && folderOf(it[0]) === folderOf(key) && !partLists[it[0]]) partLists[it[0]] = list;
+        });
+        list.forEach(function (x) { urls.push(partImg(key, x.n)); });
+      }).catch(function () {});
+    })).then(function () { warmImages(urls); });
   }
 
   /* 선택한 파츠 = { f: 파일 이름, s: 이미지 고유값(sha) }
@@ -365,13 +414,14 @@
     $pickGrid.innerHTML = list.map(function (item) {
       var file = item.n;
       return '<button type="button" class="pick-item' + (file === cur ? ' on' : '') + '" data-pid="' + esc(file) + '">' +
-        '<span class="circle sm">' + imgTag(partImg(key, file)) + '</span></button>';
+        '<span class="circle sm">' + lazyImg(partImg(key, file)) + '</span></button>';
     }).join('');
   }
   function openPicker(key, force) {
     pickKey = key;
     $pickTitle.textContent = labelOf(key) + ' 선택';
-    if (partLists[key]) renderPickList(key, partLists[key]);
+    var first = partLists[key] || cachedList(key);
+    if (first) { partLists[key] = first; renderPickList(key, first); }
     else $pickGrid.innerHTML = '<p class="empty">불러오는 중</p>';
     $picker.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -506,5 +556,6 @@
     setStatus(saved ? '저장됨' : '');
     render();
     syncSelections();
+    prefetchParts();
   });
 })();
