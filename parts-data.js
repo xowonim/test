@@ -36,6 +36,9 @@ window.REPO = {
   branch: ''    // 비워 두면 기본 브랜치
 };
 
+/* 파츠 이미지 폴더 (저장소 기준 경로, 항목 폴더의 윗단계까지만 적습니다) */
+window.PARTS_DIR = 'images/parts';
+
 /* 선택형 항목 (tone: blue / green / red / gray) */
 window.OPTIONS = {
   songs: [],       // 악곡 자동완성 목록 예: ['오마카세']

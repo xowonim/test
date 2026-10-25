@@ -21,7 +21,7 @@ button { cursor: pointer; }
 /* ---------- 홈 ---------- */
 .home-top { display: flex; justify-content: flex-end; padding: 16px; }
 .add-btn {
-  border: 1.5px solid var(--line); background: #fff; border-radius: 999px;
+  border: 1.5px solid var(--line); background: #fff;
   padding: 10px 18px; font-weight: 600;
 }
 .add-btn:active { background: var(--label); }
@@ -30,13 +30,13 @@ button { cursor: pointer; }
 .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
 .back { color: #222; text-decoration: none; font-weight: 600; }
 .status { flex: 1; color: #888; font-size: 13px; }
-.ghost { border: 1px solid #bbb; background: #fff; border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+.ghost { border: 1px solid #bbb; background: #fff; padding: 6px 12px; font-size: 13px; }
 
 .stage { padding: 0 12px 40px; }
 .tabs { display: flex; justify-content: flex-end; gap: 10px; padding-right: 20px; margin-bottom: -2px; position: relative; z-index: 1; }
 .tab {
   border: 2px solid var(--line); border-bottom: 2px solid var(--line); background: #f3f3f3;
-  border-radius: 12px 12px 0 0; padding: 6px 22px 4px; min-width: 64px;
+  padding: 6px 22px 4px; min-width: 64px;
 }
 .tab.on { background: #fff; border-bottom-color: #fff; }
 .tab .num {
@@ -44,7 +44,7 @@ button { cursor: pointer; }
   width: 24px; height: 24px; border: 1.5px solid var(--line); border-radius: 50%; font-size: 13px; font-weight: 700;
 }
 .box {
-  border: 2px solid var(--line); border-radius: 26px 0 0 0; background: #fff;
+  border: 2px solid var(--line); background: #fff;
   padding: 18px; position: relative;
 }
 
@@ -63,10 +63,10 @@ button { cursor: pointer; }
 .cell .lab { display: flex; align-items: center; justify-content: center; min-height: 34px; }
 
 .circle {
-  position: relative; display: block; aspect-ratio: 1; border-radius: 50%;
-  border: 2px dashed #e3e3e3; background: #fff; padding: 0; overflow: hidden;
+  position: relative; display: block; aspect-ratio: 1;
+  border: 0; background: #fff; padding: 0; overflow: hidden;
 }
-.circle img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.circle img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .circle:active { background: #faf6ee; }
 .circle.sm { width: 100%; }
 
@@ -77,13 +77,12 @@ button { cursor: pointer; }
 .slot img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .slot .plus { color: #ccc; font-size: 22px; }
 .slot .x {
-  position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%;
+  position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
   background: rgba(0, 0, 0, .55); color: #fff; font-style: normal; font-size: 14px; line-height: 20px; text-align: center;
 }
 .slot.big { aspect-ratio: 3 / 4; width: 100%; }
 .slot.small { width: 64px; height: 64px; border: 1px dashed #ddd; flex: none; }
 .slot.card { width: 100%; aspect-ratio: 3 / 4; }
-.circle.slot { border-radius: 50%; }
 
 .bottom {
   display: grid; grid-template-columns: 2fr 1.5fr 3.5fr;
@@ -99,22 +98,22 @@ button { cursor: pointer; }
 .codes > .lab { border-top: 0; border-bottom: 1px solid var(--line); }
 .code-list { padding: 6px; display: flex; flex-direction: column; gap: 6px; }
 .code-row { display: flex; align-items: center; gap: 6px; }
-.code-row .field { flex: 1; min-width: 0; border: 1px solid #ddd; border-radius: 6px; padding: 6px; }
+.code-row .field { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 6px; font-size: 11px; }
 .etc { grid-area: etc; display: flex; }
 .vlab {
   background: var(--label); border-right: 1px solid var(--line); width: 30px; flex: none;
   display: flex; align-items: center; justify-content: center; font-size: 13px; writing-mode: vertical-rl; letter-spacing: 4px;
 }
-.etc textarea { flex: 1; border: 0; padding: 8px; resize: vertical; min-height: 90px; outline: none; }
+.etc textarea { flex: 1; border: 0; padding: 8px; text-align: left; resize: vertical; min-height: 90px; outline: none; }
 
-.field { width: 100%; border: 0; background: #fff; padding: 8px 6px; text-align: center; border-radius: 0; outline: none; }
+.field { width: 100%; border: 0; background: #fff; padding: 8px 6px; text-align: center; border-radius: 0; outline: none; font-size: 11px; }
 .field.tone[data-tone="blue"] { background: var(--blue); }
 .field.tone[data-tone="green"] { background: var(--green); }
 .field.tone[data-tone="red"] { background: var(--red); }
 .field.tone[data-tone="gray"] { background: var(--gray); }
 select.field { appearance: none; -webkit-appearance: none; }
 
-.mini { border: 1px solid #ccc; background: #fff; border-radius: 6px; font-size: 12px; padding: 4px 8px; flex: none; }
+.mini { border: 1px solid #ccc; background: #fff; font-size: 12px; padding: 4px 8px; flex: none; }
 .mini.add { margin: 6px; }
 
 /* 우측 프렌드카드 */
@@ -134,14 +133,14 @@ select.field { appearance: none; -webkit-appearance: none; }
 }
 .picker[hidden] { display: none; }
 .picker-box {
-  background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 14px;
+  background: #fff; border: 2px solid var(--line); padding: 14px;
   width: min(720px, 100%); max-height: 80vh; display: flex; flex-direction: column;
   box-shadow: 0 8px 30px rgba(0, 0, 0, .2);
 }
 .picker-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex: none; }
 .picker-head span { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .pick-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.pick-item { border: 1px solid #ddd; background: #fff; border-radius: 10px; padding: 6px 4px; text-align: center; min-width: 0; }
+.pick-item { border: 1px solid #ddd; background: #fff; padding: 6px 4px; text-align: center; min-width: 0; }
 .pick-item.on { border: 2px solid var(--ring); background: #fdf3fb; }
 .pick-item b { display: block; font-size: clamp(9px, 2vw, 13px); font-weight: 600; margin-top: 4px; word-break: break-all; }
 .pick-item small { display: block; font-size: clamp(8px, 1.7vw, 11px); color: #777; margin-top: 2px; word-break: break-all; }

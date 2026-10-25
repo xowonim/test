@@ -61,7 +61,8 @@
   }
   /* ---------- 파츠 이미지 (깃허브 폴더에서 자동 읽기) ---------- */
   var CACHE_MS = 5 * 60 * 1000;
-  function partImg(key, file) { return 'images/parts/' + key + '/' + encodeURIComponent(file); }
+  function partsDir() { return String(window.PARTS_DIR || 'images/parts').replace(/^\/+|\/+$/g, ''); }
+  function partImg(key, file) { return partsDir() + '/' + key + '/' + encodeURIComponent(file); }
   /* 파일 이름 규칙: [정렬번호 + 구분기호] 이름 [__설명].확장자
      예) 01_ひたむき__설명.webp -> 번호 1(정렬용, 표시 안 됨), 이름 ひたむき, 설명 설명 */
   function partMeta(file) {
@@ -103,7 +104,7 @@
       if (cached) return Promise.resolve(cached.list);
       return Promise.reject(new Error('저장소 정보를 알 수 없습니다. parts-data.js의 REPO를 채워 주세요.'));
     }
-    var url = 'https://api.github.com/repos/' + r.owner + '/' + r.repo + '/contents/images/parts/' + key +
+    var url = 'https://api.github.com/repos/' + r.owner + '/' + r.repo + '/contents/' + partsDir() + '/' + key +
       (r.branch ? '?ref=' + encodeURIComponent(r.branch) : '');
     return fetch(url).then(function (res) {
       if (res.status === 404) return [];
@@ -114,7 +115,7 @@
         return f.type === 'file' && /\.(png|jpe?g|webp|gif|svg)$/i.test(f.name);
       }).map(function (f) { return { n: f.name, s: f.sha }; });
       sortParts(list);
-      try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: list })); } catch (e) {}
+      if (list.length) { try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), list: list })); } catch (e) {} }
       return list;
     }).catch(function (err) {
       if (cached) return cached.list;
@@ -272,7 +273,7 @@
     var r = resolveSel(key);
     var cur = r ? r.n : '';
     if (!list.length) {
-      $pickGrid.innerHTML = '<p class="empty">이 항목에 올라온 이미지가 없습니다.</p>';
+      $pickGrid.innerHTML = '<p class="empty">이 항목에 올라온 이미지가 없습니다.<br>확인한 폴더: ' + esc(partsDir() + '/' + key) + '</p>';
       return;
     }
     $pickGrid.innerHTML = list.map(function (item) {
