@@ -99,7 +99,7 @@ button { cursor: pointer; }
 .meta { grid-area: meta; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; }
 .meta .lab { border-top: 0; border-bottom: 1px solid var(--line); }
 .meta .lab + .field { border-bottom: 1px solid var(--line); }
-.meta .field:last-child { border-bottom: 0; }
+.meta .field { height: 32px; padding: 0 6px; flex: none; }
 .codes { grid-area: codes; border-bottom: 1px solid var(--line); }
 .codes > .lab { border-top: 0; border-bottom: 1px solid var(--line); }
 .code-list { padding: 6px; display: flex; flex-direction: column; gap: 6px; }
@@ -113,17 +113,19 @@ button { cursor: pointer; }
 .etc textarea { flex: 1; border: 0; padding: 8px; text-align: left; resize: vertical; min-height: 90px; outline: none; }
 
 .field { width: 100%; border: 0; background: #fff; padding: 8px 6px; text-align: center; border-radius: 0; outline: none; font-size: 11px; }
-.field.tone[data-tone="blue"] { background: var(--blue); }
-.field.tone[data-tone="green"] { background: var(--green); }
-.field.tone[data-tone="red"] { background: var(--red); }
-.field.tone[data-tone="gray"] { background: var(--gray); }
-select.field { appearance: none; -webkit-appearance: none; }
+select.field { appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center; }
 
 .mini { border: 1px solid #ccc; background: #fff; font-size: 12px; padding: 4px 8px; flex: none; }
 .mini.add { margin: 6px; }
+.icon-btn { border: 0; background: none; padding: 0 6px; font-size: 18px; line-height: 1; color: #b5b5b5; cursor: pointer; flex: none; }
+.icon-btn:active { color: #888; }
+.flab { position: relative; }
+.flab .icon-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+.fcol { position: relative; }
+.fcol .icon-btn { position: absolute; top: 4px; right: 6px; z-index: 2; }
 
 /* 프렌드카드 (표 아래) */
-.fthree { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fthree { display: grid; }
 .fcol { border-right: 1px solid var(--line); min-width: 0; }
 .fcol:last-child { border-right: 0; }
 .fone { width: min(220px, 100%); margin: 0 auto; padding: 10px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
@@ -154,7 +156,7 @@ select.field { appearance: none; -webkit-appearance: none; }
 .picker-head span { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .pick-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .pick-item { border: 1px solid #ddd; background: #fff; padding: 6px 4px; text-align: center; min-width: 0; }
-.pick-item.on { border: 2px solid var(--line); background: var(--label); }
+.pick-item.on { border: 3px solid var(--label); background: #fff; padding: 4px 2px; }
 .pick-item b { display: block; font-size: clamp(9px, 2vw, 13px); font-weight: 600; margin-top: 4px; word-break: break-all; }
 .pick-item small { display: block; font-size: clamp(8px, 1.7vw, 11px); color: #777; margin-top: 2px; word-break: break-all; }
 .empty { grid-column: 1 / -1; color: #999; text-align: center; padding: 20px 0; margin: 0; }
